@@ -1,0 +1,44 @@
+/* Add your styles here */
+body {
+    font-family: Arial, sans-serif;
+}
+
+.login-container, .dashboard-container {
+    max-width: 400px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+h1 {
+    text-align: center;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label, input {
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.alert {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+}

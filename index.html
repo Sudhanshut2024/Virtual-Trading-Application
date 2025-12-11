@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo">
+            <a href="index.html">
+                <img src="{{ url_for('static', filename='freepaisalogo.jpg') }}" alt="Free Paisa Image">
+            </a>
+        </div>
+        <div class="welcome-message">
+            Welcome to Virtual Trading Web
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('register') }}" class="register-btn">Register</a>
+            <a href="{{ url_for('login') }}" class="login-btn">Login</a>
+        </div>
+    </header>
+
+    <main class="market-section">
+        <!-- Indian Indices Section -->
+        <h2>BROAD MARKET INDICES</h2>
+        <div class="market-cards">
+            <div class="market-card">
+                <h3>NIFTY 50</h3>
+                <p data-index="NIFTY 50">Price: {{ index_data['NIFTY 50'] }}</p>
+                <p class="change green">+10 (0.38%)</p>
+            </div>
+            <div class="market-card">
+                <h3>BANK NIFTY</h3>
+                <p data-index="NIFTY BANK">Price: {{ index_data['NIFTY BANK'] }}</p>
+                <p class="change red">-15 (0.60%)</p>
+            </div>
+            <div class="market-card">
+                <h3>FINNIFTY</h3>
+                <p data-index="NIFTY FINANCIAL SERVICES">Price: {{ index_data['NIFTY FINANCIAL SERVICES'] }}</p>
+                <p class="change green">+5 (0.53%)</p>
+            </div>
+            <div class="market-card">
+                <h3>NIFTY MIDCAP SELECT</h3>
+                <p data-index="NIFTY MIDCAP SELECT">Price: {{ index_data['NIFTY MIDCAP SELECT'] }}</p>
+                <p class="change red">-10 (0.83%)</p>
+            </div>
+            <div class="market-card">
+                <h3>NIFTY NEXT 50</h3>
+                <p data-index="NIFTY NEXT 50">Price: {{ index_data['NIFTY NEXT 50'] }}</p>
+                <p class="change green">+20 (1.85%)</p>
+            </div>
+            <div class="market-card">
+                <h3>NIFTY 100</h3>
+                <p data-index="NIFTY 100">Price: {{ index_data['NIFTY 100'] }}</p>
+                <p class="change green">+3 (0.75%)</p>
+            </div>
+            <div class="market-card">
+                <h3>NIFTY 200</h3>
+                <p data-index="NIFTY 200">Price: {{ index_data['NIFTY 200'] }}</p>
+                <p class="change green">+3 (0.75%)</p>
+            </div>
+            <div class="market-card">
+                <h3>NIFTY 500</h3>
+                <p data-index="NIFTY 500">Price: {{ index_data['NIFTY 500'] }}</p>
+                <p class="change green">+3 (0.75%)</p>
+            </div>
+        </div>
+
+        <!-- Sectoral Indices Section -->
+        <section>
+            <h2>SECTORAL INDICES</h2>
+            <div class="market-cards">
+                <div class="market-card">
+                    <h3>NIFTY IT</h3>
+                    <p data-index="NIFTY IT">Price: {{ index_data['NIFTY IT'] }}</p>
+                    <p class="change green">+3 (0.75%)</p>
+                </div>
+                <div class="market-card">
+                    <h3>NIFTY FMCG</h3>
+                    <p data-index="NIFTY FMCG">Price: {{ index_data['NIFTY FMCG'] }}</p>
+                    <p class="change green">+3 (0.75%)</p>
+                </div>
+                <div class="market-card">
+                    <h3>NIFTY METAL</h3>
+                    <p data-index="NIFTY METAL">Price: {{ index_data['NIFTY METAL'] }}</p>
+                    <p class="change green">+3 (0.75%)</p>
+                </div>
+                <div class="market-card">
+                    <h3>NIFTY PHARMA</h3>
+                    <p data-index="NIFTY PHARMA">Price: {{ index_data['NIFTY PHARMA'] }}</p>
+                    <p class="change green">+3 (0.75%)</p>
+                </div>
+                <div class="market-card">
+                    <h3>NIFTY REALTY</h3>
+                    <p data-index="NIFTY REALTY">Price: {{ index_data['NIFTY REALTY'] }}</p>
+                    <p class="change green">+3 (0.75%)</p>
+                </div>
+                <div class="market-card">
+                    <h3>NIFTY PRIVATE BANK</h3>
+                    <p data-index="NIFTY PRIVATE BANK">Price: {{ index_data['NIFTY PRIVATE BANK'] }}</p>
+                    <p class="change green">+3 (0.75%)</p>
+                </div>
+                <div class="market-card">
+                    <h3>NIFTY OIL & GAS</h3>
+                    <p data-index="NIFTY OIL & GAS">Price: {{ index_data['NIFTY OIL & GAS'] }}</p>
+                    <p class="change green">+3 (0.75%)</p>
+                </div>
+                <div class="market-card">
+                    <h3>NIFTY PSU BANK</h3>
+                    <p data-index="NIFTY PSU BANK">Price: {{ index_data['NIFTY PSU BANK'] }}</p>
+                    <p class="change green">+3 (0.75%)</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <!-- Footer content can be added here if needed -->
+    </footer>
+
+    <script>
+        // Function to fetch and update index data
+        async function updateIndexData() {
+            try {
+                console.log("Fetching index data...");  // Log when the fetch starts
+                const response = await fetch('/get-index-data');  // Fetch data from Flask route
+                const indexData = await response.json();  // Parse the JSON response
+
+                console.log("Received index data:", indexData);  // Log the received data
+
+                // Update the HTML elements with the fetched data
+                document.querySelector('p[data-index="NIFTY 50"]').textContent = `Price: ${indexData['NIFTY 50']}`;
+                document.querySelector('p[data-index="NIFTY BANK"]').textContent = `Price: ${indexData['NIFTY BANK']}`;
+                document.querySelector('p[data-index="NIFTY FINANCIAL SERVICES"]').textContent = `Price: ${indexData['NIFTY FINANCIAL SERVICES']}`;
+                document.querySelector('p[data-index="NIFTY MIDCAP SELECT"]').textContent = `Price: ${indexData['NIFTY MIDCAP SELECT']}`;
+                document.querySelector('p[data-index="NIFTY NEXT 50"]').textContent = `Price: ${indexData['NIFTY NEXT 50']}`;
+                document.querySelector('p[data-index="NIFTY 100"]').textContent = `Price: ${indexData['NIFTY 100']}`;
+                document.querySelector('p[data-index="NIFTY 200"]').textContent = `Price: ${indexData['NIFTY 200']}`;
+                document.querySelector('p[data-index="NIFTY 500"]').textContent = `Price: ${indexData['NIFTY 500']}`;
+                document.querySelector('p[data-index="NIFTY IT"]').textContent = `Price: ${indexData['NIFTY IT']}`;
+                document.querySelector('p[data-index="NIFTY FMCG"]').textContent = `Price: ${indexData['NIFTY FMCG']}`;
+                document.querySelector('p[data-index="NIFTY METAL"]').textContent = `Price: ${indexData['NIFTY METAL']}`;
+                document.querySelector('p[data-index="NIFTY PHARMA"]').textContent = `Price: ${indexData['NIFTY PHARMA']}`;
+                document.querySelector('p[data-index="NIFTY REALTY"]').textContent = `Price: ${indexData['NIFTY REALTY']}`;
+                document.querySelector('p[data-index="NIFTY PRIVATE BANK"]').textContent = `Price: ${indexData['NIFTY PRIVATE BANK']}`;
+                document.querySelector('p[data-index="NIFTY OIL & GAS"]').textContent = `Price: ${indexData['NIFTY OIL & GAS']}`;
+                document.querySelector('p[data-index="NIFTY PSU BANK"]').textContent = `Price: ${indexData['NIFTY PSU BANK']}`;
+            } catch (error) {
+                console.error('Error fetching index data:', error);
+            }
+        }
+
+        // Call the update function every 15 seconds
+        setInterval(updateIndexData, 15000);
+
+        // Initial call to update data right away when the page loads
+        updateIndexData();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Feedback</title>
+</head>
+<body>
+    <h1>Submit Your Feedback</h1>
+
+    <!-- Feedback Form -->
+    <form action="/feedback" method="POST">
+        <label for="feedback">Your Feedback:</label><br>
+        <textarea id="feedback" name="feedback" rows="4" cols="50" required></textarea><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+
+    <!-- Display only feedback-related flash messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirm Buy</title>
+</head>
+<body>
+    <h1>Confirm Buy</h1>
+    <!-- <form method="POST">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.stock_symbol.label }} {{ form.stock_symbol() }}
+        </div>
+        <div>
+            {{ form.quantity.label }} {{ form.quantity() }}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form> -->
+
+
+
+    <form method="POST" action="{{ url_for('confirm_buy') }}">
+        {{ form.hidden_tag() }}
+        <div>
+            <label for="stock_symbol">Stock Symbol: {{ form.stock_symbol() }}</label>
+        </div>
+        <div>
+            <label for="quantity">Quantity:</label>
+            {{ form.quantity() }}
+        </div>
+        <div>
+            <button type="submit">Confirm Buy</button>
+        </div>
+    </form>
+    
+</body>
+</html>

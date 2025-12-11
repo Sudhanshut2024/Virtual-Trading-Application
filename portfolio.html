@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='portfolio.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>PORTFOLIO</h1>
+    </header>
+
+    <main>
+        <section id="portfolioOverview">
+            <h2>Portfolio Overview</h2>
+            <div class="portfolio-details">
+                <div class="portc">Remaining Balance: ₹<span id="remainingBalance">{{ user[4] }}</span></div>
+                <div class="portc">Total Balance: <span id="totalBalance">₹0.00</span></div>
+                <div class="portc">Invested Money: <span id="totalValue">₹0.00</span></div>
+                
+                
+            </div>
+            <div class="right-align">
+                <p>Your Total P&L : <span id="balanceDifference" class="pl-value">₹0.00</span></p>
+            </div>
+            {% if not user %}
+                <p>No user data available.</p>
+            {% endif %}
+        </section>
+
+        <section id="portfolioList">
+            <h2>Stock Portfolio</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Company Name</th>
+                        <th>Purchase Price</th>
+                        <th>Current Price</th>
+                        <th>Quantity Owned</th>
+                        <th>Total Value</th>
+                        <th>Profit/Loss</th> <!-- New P&L Column -->
+                    </tr>
+                </thead>
+
+                
+                <tbody id="portfolioTableBody">
+                    <!-- Portfolio stocks will be added here -->
+                </tbody>
+            </table>
+        </section>
+        
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchPortfolio();
+        });
+
+        function fetchPortfolio() {
+            fetch('/api/my-portfolio')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.portfolio) {
+                        updatePortfolio(data.portfolio);
+                    }
+                })
+                .catch(error => console.error('Error fetching portfolio:', error));
+        }
+
+        function updatePortfolio(portfolio) {
+    const portfolioTableBody = document.getElementById('portfolioTableBody');
+    const totalValueElement = document.getElementById('totalValue');  
+    const remainingBalanceElement = document.getElementById('remainingBalance');
+    const totalBalanceElement = document.getElementById('totalBalance');
+    const balanceDifferenceElement = document.getElementById('balanceDifference');
+
+    portfolioTableBody.innerHTML = '';  // Clear previous data
+
+    let totalValue = 0;
+
+    portfolio.forEach(stock => {
+        const totalStockValue = (stock.price * stock.quantity).toFixed(2);
+        totalValue += parseFloat(totalStockValue);
+
+        // Calculate P&L: (Current Price - Purchase Price) * Quantity
+        const stockPL = ((stock.price - stock.purchase_price) * stock.quantity).toFixed(2);
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${stock.name}</td>
+            <td>₹${stock.purchase_price}</td>
+            <td>₹${stock.price}</td>
+            <td>${stock.quantity}</td>
+            <td>₹${totalStockValue}</td>
+            <td style="color: ${stockPL < 0 ? 'red' : 'green'}">₹${stockPL}</td>  <!-- Display P&L with color -->
+        `;
+        portfolioTableBody.appendChild(row);
+    });
+
+    // Update total value of the portfolio
+    totalValueElement.textContent = `₹${totalValue.toFixed(2)}`;
+
+    // Get the remaining balance from the HTML (retrieved from the template)
+    const remainingBalance = parseFloat(remainingBalanceElement.textContent.replace('₹', ''));
+
+    // Calculate and update the total balance (used + remaining)
+    const totalBalance = totalValue + remainingBalance;
+    totalBalanceElement.textContent = `₹${totalBalance.toFixed(2)}`;
+
+    // Calculate and update P&L value as the difference from ₹100,000
+    const plValue = totalBalance - 100000;  // Assuming initial capital is ₹100,000
+    balanceDifferenceElement.textContent = `₹${plValue.toFixed(2)}`;
+
+    // Change the color based on P&L value
+    if (plValue < 0) {
+        balanceDifferenceElement.style.color = 'red';  // Negative P&L
+    } else {
+        balanceDifferenceElement.style.color = 'green';  // Positive P&L
+    }
+}
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchPortfolio();  // Initial load
+    setInterval(fetchPortfolio, 20000);  // Refresh portfolio every 20 seconds
+});
+
+function fetchPortfolio() {
+    fetch('/api/my-portfolio')
+        .then(response => response.json())
+        .then(data => {
+            if (data.portfolio) {
+                updatePortfolio(data.portfolio);
+            }
+        })
+        .catch(error => console.error('Error fetching portfolio:', error));
+}
+
+
+    </script>
+</body>
+
+</html>

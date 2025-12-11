@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watchlist</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='watchlist.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <a href="{{ url_for('dashboard') }}">
+                <img src="{{ url_for('static', filename='freepaisalogo.jpg') }}" alt="Free Paisa Logo">
+            </a>
+        </div>
+        <div class="search-bar-container">
+            <div class="search-bar">
+                <input type="text" id="stockSearch" placeholder="Search for a stock...">
+                <button id="searchButton">Search</button>
+                <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Home</a>
+            <a href="{{ url_for('watchlist') }}"><i class="fas fa-star"></i> Watchlist</a>
+            <a href="{{ url_for('portfolio') }}"><i class="fas fa-briefcase"></i> Portfolio</a>
+            <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+            <div class="profile-menu">
+                <button title="Profile Menu"><i class="fas fa-user"></i></button>
+                <div class="profile-menu-content">
+                    <a href="{{ url_for('profile') }}"><i class="fas fa-user-circle"></i> Profile</a>
+                    <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="watchlist">
+            <h2>Watchlist</h2>
+            <ul class="stock-list">
+                {% for stock in watchlist_data %}
+                <li class="stock-item">
+                    <div class="hover-buttons">
+                        <button class="buy-btn">Buy</button>
+                        <button class="sell-btn">Sell</button>
+                    </div>
+                    <span class="stock-name">{{ stock.symbol }}</span>
+                    <span class="stock-price">₹{{ stock.price }}</span>
+                    <span class="stock-quantity">Quantity: {{ stock.quantity }}</span>
+                    <button class="remove-btn"><i class="fas fa-times"></i> Remove</button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal for Buy Quantity -->
+    <div id="buyModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalStockName"></h3>
+            <input type="number" id="buyQuantity" placeholder="Enter quantity" min="1">
+            <button id="confirmBuy">Confirm Buy</button>
+            <button id="cancelBuy">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Modal for Sell Quantity -->
+    <div id="sellModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalSellStockName"></h3>
+            <input type="number" id="sellQuantity" placeholder="Enter quantity" min="1">
+            <button id="confirmSell">Confirm Sell</button>
+            <button id="cancelSell">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const stockSearch = document.getElementById('stockSearch');
+            const suggestions = document.getElementById('autocompleteSuggestions');
+            const searchButton = document.getElementById('searchButton');
+            const watchlist = document.querySelector('.stock-list');
+            const buyModal = document.getElementById('buyModal');
+            const modalStockName = document.getElementById('modalStockName');
+            const buyQuantityInput = document.getElementById('buyQuantity');
+            const sellModal = document.getElementById('sellModal');
+            const modalSellStockName = document.getElementById('modalSellStockName');
+            const sellQuantityInput = document.getElementById('sellQuantity');
+            let selectedStockItem = null;
+            let virtualFund = 100000;  // Initial virtual fund; you can fetch this from the server.
+
+            stockSearch.addEventListener('input', function() {
+                const input = this.value.toLowerCase();
+                if (input.length > 0) {
+                    const suggestionList = ['RELIANCE', 'ACC', 'HDFCBANK', 'INFY', 'ONGC', 'HDFCLIFE', 'TATAMOTORS', 'WIPRO', 'INDUSINDBK', 'HINDALCO', 'TATASTEEL', 'HCLTECH', 'LT', 'SBIN', 'TCS', 'TITAN', 'TECHM', 'AXISBANK', 'SUNPHARMA', 'ADANIENT', 'SBILIFE', 'BAJAJ-AUTO', 'MARUTI', 'GRASIM', 'JSWSTEEL', 'BEL', 'KOTAKBANK', 'COALINDIA', 'NTPC', 'ADANIPORTS', 'ICICIBANK', 'HDFCBANK', 'DRREDDY', 'BAJAJFINSV', 'TATACONSUM', 'APOLLOHOSP', 'ITC', 'POWERGRID', 'HINDUNILVR', 'BHARTIARTL', 'CIPLA', 'BRITANNIA', 'M&M', 'INDUSINDBK', 'KOTAKBANK', 'ICICIBANK', 'ICICIPRULI', 'HDFCAMC', 'MUTHOOTFIN'];
+                    const filteredSuggestions = suggestionList.filter(item =>
+                        item.toLowerCase().includes(input) && item.toLowerCase() !== input);
+                    suggestions.innerHTML = filteredSuggestions.map(item => `<div>${item}</div>`).join('');
+                    suggestions.style.display = 'block';
+                } else {
+                    suggestions.innerHTML = '';
+                    suggestions.style.display = 'none';
+                }
+            });
+
+            suggestions.addEventListener('click', function(event) {
+                if (event.target.tagName === 'DIV') {
+                    stockSearch.value = event.target.textContent;
+                    suggestions.innerHTML = '';
+                    suggestions.style.display = 'none';
+                }
+            });
+
+            searchButton.addEventListener('click', function() {
+                const stockName = stockSearch.value.trim();
+                if (stockName !== '') {
+                    const existingStock = Array.from(watchlist.querySelectorAll('.stock-name'))
+                        .find(item => item.textContent === stockName);
+
+                    if (existingStock) {
+                        alert(`${stockName} is already in your watchlist.`);
+                        return;
+                    }
+
+                    fetch('/add-to-watchlist', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ stock_name: stockName })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const newStockItem = document.createElement('li');
+                            newStockItem.classList.add('stock-item');
+                            newStockItem.innerHTML = `
+                                <div class="hover-buttons">
+                                    <button class="buy-btn">Buy</button>
+                                    <button class="sell-btn">Sell</button>
+                                </div>
+                                <span class="stock-name">${stockName}</span>
+                                <span class="stock-price">₹0.00</span>
+                                <span class="stock-quantity">Not owned</span>
+                                <button class="remove-btn"><i class="fas fa-times"></i> Remove</button>
+                            `;
+                            watchlist.appendChild(newStockItem);
+                            stockSearch.value = '';
+
+                            fetchStockPrice(stockName);
+                            attachButtonEvents(newStockItem);
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error adding stock to watchlist:', error);
+                    });
+                }
+            });
+
+            function fetchStockPrice(symbol) {
+                fetch(`/stock-price?symbol=${symbol}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const stockItem = Array.from(watchlist.querySelectorAll('li'))
+                            .find(item => item.querySelector('.stock-name').textContent === symbol);
+                        
+                        if (stockItem && data.price) {
+                            stockItem.querySelector('.stock-price').textContent = `₹${data.price}`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching stock price:', error);
+                    });
+            }
+
+            function removeStockFromWatchlist(stockItem, stockName) {
+                fetch('/remove-from-watchlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ stock_name: stockName })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        stockItem.remove();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing stock from watchlist:', error);
+                });
+            }
+
+            function attachButtonEvents(stockItem) {
+                const buyButton = stockItem.querySelector('.buy-btn');
+                const sellButton = stockItem.querySelector('.sell-btn');
+                const removeButton = stockItem.querySelector('.remove-btn');
+
+                buyButton.addEventListener('click', function() {
+                    selectedStockItem = stockItem;
+                    modalStockName.textContent = stockItem.querySelector('.stock-name').textContent;
+                    buyModal.style.display = 'block';
+                });
+
+                sellButton.addEventListener('click', function() {
+                    selectedStockItem = stockItem;
+                    modalSellStockName.textContent = stockItem.querySelector('.stock-name').textContent;
+                    sellModal.style.display = 'block';
+                });
+
+                removeButton.addEventListener('click', function() {
+                    const stockName = stockItem.querySelector('.stock-name').textContent;
+                    if (confirm(`Are you sure you want to remove ${stockName} from your watchlist?`)) {
+                        removeStockFromWatchlist(stockItem, stockName);
+                    }
+                });
+            }
+
+            watchlist.querySelectorAll('.stock-item').forEach(attachButtonEvents);
+
+            document.getElementById('confirmBuy').addEventListener('click', function() {
+                const stockName = modalStockName.textContent;
+                const quantity = parseInt(buyQuantityInput.value);
+                const stockPrice = parseFloat(selectedStockItem.querySelector('.stock-price').textContent.replace('₹', ''));
+
+                if (quantity > 0) {
+                    const totalCost = quantity * stockPrice;
+                    if (virtualFund >= totalCost) {
+                        fetch('/buy-stock', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ stock_name: stockName, quantity: quantity })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const stockQuantitySpan = selectedStockItem.querySelector('.stock-quantity');
+                                stockQuantitySpan.textContent = `Quantity: ${quantity}`;
+                                buyModal.style.display = 'none';
+                                buyQuantityInput.value = '';
+
+                                // Show alert after successful buy
+                                alert(`You successfully bought ${quantity} shares of ${stockName}!`);
+
+                                virtualFund -= totalCost;
+                            } else {
+                                alert(data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error buying stock:', error);
+                        });
+                    } else {
+                        alert('Insufficient funds to complete the purchase.');
+                    }
+                } else {
+                    alert('Please enter a valid quantity.');
+                }
+            });
+
+            document.getElementById('confirmSell').addEventListener('click', function() {
+                const stockName = modalSellStockName.textContent;
+                const quantity = parseInt(sellQuantityInput.value);
+
+                if (quantity > 0) {
+                    fetch('/sell-stock', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ stock_name: stockName, quantity: quantity })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const stockQuantitySpan = selectedStockItem.querySelector('.stock-quantity');
+                            const currentQuantity = parseInt(stockQuantitySpan.textContent.replace('Quantity: ', ''));
+                            const newQuantity = currentQuantity - quantity;
+
+                            if (newQuantity > 0) {
+                                stockQuantitySpan.textContent = `Quantity: ${newQuantity}`;
+                            } else {
+                                stockQuantitySpan.textContent = 'Not owned';
+                            }
+
+                            sellModal.style.display = 'none';
+                            sellQuantityInput.value = '';
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error selling stock:', error);
+                    });
+                } else {
+                    alert('Please enter a valid quantity.');
+                }
+            });
+
+            document.getElementById('cancelBuy').addEventListener('click', function() {
+                buyModal.style.display = 'none';
+                buyQuantityInput.value = '';
+            });
+
+            document.getElementById('cancelSell').addEventListener('click', function() {
+                sellModal.style.display = 'none';
+                sellQuantityInput.value = '';
+            });
+
+            window.onclick = function(event) {
+                if (event.target == buyModal) {
+                    buyModal.style.display = 'none';
+                }
+                if (event.target == sellModal) {
+                    sellModal.style.display = 'none';
+                }
+            };
+        });
+    </script>
+</body>
+</html>

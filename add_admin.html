@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        .container {
+            margin: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+        a:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Add Admin</h1>
+    </header>
+    <div class="container">
+        <form method="POST" action="{{ url_for('add_admin') }}">
+            <label for="username">Username:</label>
+            <input type="text" name="username" required>
+
+            <label for="password">Password:</label>
+            <input type="password" name="password" required>
+
+            <input type="submit" value="Add Admin">
+        </form>
+        <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+    </div>
+</body>
+</html>

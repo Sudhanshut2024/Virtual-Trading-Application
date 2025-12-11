@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <a href="{{ url_for('dashboard') }}">
+                <img src="{{ url_for('static', filename='freepaisalogo.jpg') }}" alt="Free Paisa Image">
+
+
+            </a>
+        </div>
+        <div class="search-bar-container">
+            <div class="search-bar">
+                <input type="text" id="stockSearch" placeholder="Search for a stock...">
+                <button onclick="addToDashboard(document.getElementById('stockSearch').value)">Search</button>
+                <div class="autocomplete-suggestions" id="autocompleteSuggestions"></div>
+            </div>
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Home</a>
+            <a href="{{ url_for('watchlist') }}"><i class="fas fa-star"></i> Watchlist</a>
+            <a href="{{ url_for('portfolio') }}"><i class="fas fa-briefcase"></i> Portfolio</a>
+            <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+            
+            <!-- Profile Menu -->
+            <div class="profile-menu">
+                <button title="Profile Menu"><i class="fas fa-user"></i></button>
+                <div class="profile-menu-content">
+                    <a href="{{ url_for('profile') }}"><i class="fas fa-user-circle"></i> Profile</a>
+                    <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    
+                </div>
+            </div>
+        </div>
+        
+    </header>
+    
+        
+
+    <div class="greeting">
+        
+        {% if user %}
+        <!-- <p>Welcome, <span>User</span>! Here's your market dashboard.</p>
+         -->
+            Welcome {{user[1] }} <p>Have A Great Day!</p>
+            <!-- Email : {{user[2] }}</li> -->
+
+
+        {% endif %}
+    </div>
+
+    <div class="indices-section">
+        <h2>Indian Indices</h2>
+        <div class="indices-cards">
+            <!-- Show specific indices -->
+            <div class="indices-card">
+                <h3>NIFTY 50</h3>
+                <p>Price: {{ index_data.get('NIFTY 50', 'N/A') }}</p>
+                <p class="change red">Change: -15 (0.09%)</p> <!-- Replace this with dynamic change if available -->
+            </div>
+            <div class="indices-card">
+                <h3>BANK NIFTY</h3>
+                <p>Price: {{ index_data.get('NIFTY BANK', 'N/A') }}</p>
+                <p class="change green">Change: +100 (0.24%)</p>
+            </div>
+            <div class="indices-card">
+                <h3>FINNIFTY</h3>
+                <p>Price: {{ index_data.get('NIFTY FINANCIAL SERVICES', 'N/A') }}</p>
+                <p class="change red">Change: -20 (0.10%)</p>
+            </div>
+            <div class="indices-card">
+                <h3>NIFTY MIDCAP SELECT</h3>
+                <p>Price: {{ index_data.get('NIFTY MIDCAP SELECT', 'N/A') }}</p>
+                <p class="change green">Change: +50 (0.38%)</p> <!-- Replace with actual change if available -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Optional: Loop through all the indices if needed -->
+    <div class="indices-section">
+        <h2>All Indices</h2>
+        <div class="indices-cards">
+            {% for index, price in index_data.items() %}
+                <div class="indices-card">
+                    <h3>{{ index }}</h3>
+                    <p>Price: {{ price }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    
+        
+        
+
+
+    <div class="market-section">
+        <h2>Market Overview</h2>
+        <div class="market-cards" id="marketDashboard">
+            <!-- Stock cards will be added here dynamically -->
+        </div>
+    </div>
+
+
+
+ <!-- Indian Stocks Section -->
+<section class="indices-section">
+    <h2>Indices With All Stocks</h2>
+    <div class="indices-columns">
+        {% for index, stocks in all_stocks_data.items() %}
+            <div class="indices-column">
+                <h3>{{ index }} STOCKS</h3>
+                {% if stocks %}
+                    {% for symbol, price in stocks.items() %}
+                        <div class="market-card">
+                            <p>{{ symbol }} : </p>  <!-- Added space before the colon -->
+                            <p>₹{{ price }}</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No stocks available.</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+
+
+    <div class="confirmation-modal" id="confirmationModal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
+            <div class="modal-buttons">
+                <button class="confirm-btn" id="confirmAdd">Confirm</button>
+                <button class="cancel-btn" id="cancelAdd">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    const stockSearch = document.getElementById('stockSearch');
+    const suggestions = document.getElementById('autocompleteSuggestions');
+
+    stockSearch.addEventListener('input', function() {
+        const input = this.value.toLowerCase();
+        if (input.length > 0) {
+            const suggestionList = ['RELIANCE', 'ACC', 'HDFCBANK', 'INFY', 'ONGC', 'HDFCLIFE', 'TATAMOTORS', 'WIPRO', 'INDUSINDBK', 'HINDALCO', 'TATASTEEL', 'HCLTECH', 'LT', 'SBIN', 'TCS', 'TITAN', 'TECHM', 'AXISBANK', 'SUNPHARMA', 'ADANIENT', 'SBILIFE', 'BAJAJ-AUTO', 'MARUTI', 'GRASIM', 'JSWSTEEL', 'BEL', 'KOTAKBANK', 'COALINDIA', 'NTPC', 'ADANIPORTS', 'ICICIBANK', 'HDFCBANK', 'DRREDDY', 'BAJAJFINSV', 'TATACONSUM', 'APOLLOHOSP', 'ITC', 'POWERGRID', 'HINDUNILVR', 'BHARTIARTL', 'CIPLA', 'BRITANNIA', 'M&M', 'INDUSINDBK', 'KOTAKBANK', 'ICICIBANK', 'ICICIPRULI', 'HDFCAMC', 'MUTHOOTFIN', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''];  // Update this dynamically from backend
+            const filteredSuggestions = suggestionList.filter(item =>
+                item.toLowerCase().includes(input) && item.toLowerCase() !== input);
+            suggestions.innerHTML = filteredSuggestions.map(item => `<div>${item}</div>`).join('');
+            suggestions.style.display = 'block';
+        } else {
+            suggestions.innerHTML = '';
+            suggestions.style.display = 'none';
+        }
+    });
+
+    suggestions.addEventListener('click', function(event) {
+        if (event.target.tagName === 'DIV') {
+            stockSearch.value = event.target.textContent;
+            suggestions.innerHTML = '';
+            suggestions.style.display = 'none';
+        }
+    });
+});
+
+        function fetchStockPrice(symbol) {
+            fetch(`/stock-price?symbol=${symbol}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+    
+                    const price = data.price;
+                    const change = (Math.random() * 20 - 10).toFixed(2); // Simulated change percentage
+                    const changeClass = change >= 0 ? 'green' : 'red';
+    
+                    // Find the existing market card by symbol and update it
+                    const marketCard = document.getElementById(`market-card-${symbol}`);
+                    if (marketCard) {
+                        marketCard.querySelector('.price').textContent = `Price: ₹${price}`;
+                        const changeElement = marketCard.querySelector('.change');
+                        changeElement.textContent = `Change: ${change}%`;
+                        changeElement.className = `change ${changeClass}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching stock price:', error);
+                    alert('Failed to fetch stock price. Please try again.');
+                });
+        }
+    
+        function addToDashboard(symbol) {
+            // Check if the stock is already on the dashboard
+            if (document.getElementById(`market-card-${symbol}`)) {
+                alert(`${symbol} is already on the dashboard.`);
+                return;
+            }
+    
+            const marketCard = document.createElement('div');
+            marketCard.className = 'market-card';
+            marketCard.id = `market-card-${symbol}`;
+            marketCard.innerHTML = `
+                <h3>${symbol}</h3>
+                <p class="price">Price: Loading...</p>
+                <p class="change">Change: Loading...</p>
+            `;
+    
+            document.getElementById('marketDashboard').appendChild(marketCard);
+    
+            // Fetch the initial price and start periodic updates
+            fetchStockPrice(symbol);
+            setInterval(() => fetchStockPrice(symbol), 20000); // Update every 20 seconds
+        }
+    
+        function toggleTheme() {
+            const body = document.body;
+            body.style.background = body.style.background === 'white' ? '#1e1e1e' : 'white';
+            body.style.color = body.style.color === '#333' ? '#f0f0f0' : '#333';
+        }
+    </script>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <a href="{{ url_for('dashboard') }}">
+                    <img src="{{ url_for('static', filename='freepaisalogo.jpg') }}" alt="Free Paisa Image">
+                </a>
+            </div>
+            <div class="footer-links">
+                <a href="{{ url_for('terms') }}">Terms of Service</a>
+                <a href="{{ url_for('privacy') }}">Privacy Policy</a>
+                <a href="{{ url_for('feedback')}}">Feedback</a>
+                <a href="{{url_for('about')}}">About Us</a>
+
+            </div>
+            <div class="footer-social">
+                <a href="https://www.facebook.com" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
+                <a href="https://www.linkedin.com" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+            
+           
+
+        </div>
+        <div class="footer-copyright">
+            <p>&copy; 2024 Free Paisa. All rights reserved.</p>
+        </div>
+    </footer>
+    
+
+</body>
+</html>
