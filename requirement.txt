@@ -1,0 +1,8 @@
+flask
+flask-wtf
+wtforms
+bcrypt
+flask-mysqldb
+mysqlclient
+requests
+werkzeug
