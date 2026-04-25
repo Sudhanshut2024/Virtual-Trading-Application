@@ -6,3 +6,4 @@ flask-mysqldb
 mysqlclient
 requests
 werkzeug
+gunicorn
